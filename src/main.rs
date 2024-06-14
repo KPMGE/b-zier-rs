@@ -9,19 +9,15 @@ const BEZIER_CURVE_CIRCLE_RADIUS: f32 = 3.0;
 
 fn main() {
     let bg_color = Color::from_hex("3c3836").unwrap();
-    let bezier_curve_circle_color = Color::from_hex("8ec07c").unwrap();
     let axis_color: Color = Color::WHITE;
-    let handle_color = Color::from_hex("cc241d").unwrap();
-    let hover_color = Color::from_hex("d79921").unwrap();
-    let selected_color = Color::WHITE;
+    let bezier_curve_circle_color = Color::from_hex("8ec07c").unwrap();
+    let circle_default_color = Color::from_hex("cc241d").unwrap();
+    let circle_hover_color = Color::from_hex("d79921").unwrap();
+    let selected_circle_color = Color::WHITE;
 
     let (mut rl, thread) = raylib::init().size(740, 580).title("Bézier").build();
-
-    let screen_width = rl.get_screen_width() as u32;
-    let screen_height = rl.get_screen_height() as u32;
-
-    let offset_width = screen_width as f32 / 2.0 - AXIS_LENGTH as f32 / 2.0;
-    let offset_height = screen_height as f32 / 2.0 + AXIS_LENGTH as f32 / 2.0;
+    let offset_width = rl.get_screen_width() as f32 / 2.0 - AXIS_LENGTH as f32 / 2.0;
+    let offset_height = rl.get_screen_height() as f32 / 2.0 + AXIS_LENGTH as f32 / 2.0;
     let camera = Camera2D {
         zoom: 1.0,
         offset: Vector2::new(offset_width, offset_height).into(),
@@ -51,7 +47,6 @@ fn main() {
         let c3 = circles.get(2).unwrap().clone();
         let c4 = circles.get(3).unwrap().clone();
 
-        // draw connections between circles to create handles
         mode2d.draw_line_v(c1, c2, Color::ROYALBLUE);
         mode2d.draw_line_v(c3, c4, Color::ROYALBLUE);
 
@@ -61,21 +56,20 @@ fn main() {
 
             let is_circle_selected = Some(idx) == selected_circle_idx;
 
-            let color = if is_circle_selected {
-                selected_color
+            let circle_color = if is_circle_selected {
+                selected_circle_color
             } else if is_handle_on_hover {
-                hover_color
+                circle_hover_color
             } else {
-                handle_color
+                circle_default_color
             };
 
             if is_circle_selected {
                 *circle = mouse;
             }
 
-            mode2d.draw_circle_v(*circle, HANDLE_RADIUS, color);
+            mode2d.draw_circle_v(*circle, HANDLE_RADIUS, circle_color);
 
-            // if we're not dragging any handle and hover over a handle and click, we should select it
             if selected_circle_idx == None
                 && is_handle_on_hover
                 && mode2d.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT)
@@ -83,7 +77,6 @@ fn main() {
                 selected_circle_idx = Some(idx);
             }
 
-            // if we're dragging a handle and we release the mouse, we should unselect it
             if is_circle_selected && mode2d.is_mouse_button_released(MouseButton::MOUSE_BUTTON_LEFT)
             {
                 selected_circle_idx = None;
