@@ -115,8 +115,8 @@ fn main() {
 
             mode2d.draw_circle(handle.center_x, handle.center_y, handle.radius, color);
 
-            // if we hover over a handle and click, we should select it
-            if is_handle_on_hover && mode2d.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT) {
+            // if we're not dragging any handle and hover over a handle and click, we should select it
+            if  dragging_handle_idx == None && is_handle_on_hover && mode2d.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT) {
                 dragging_handle_idx = Some(idx);
             }
 
