@@ -59,6 +59,13 @@ fn main() {
         mode2d.draw_line(0, 0, AXIS_LENGTH, 0, axis_color);
         mode2d.draw_line(0, 0, 0, -AXIS_LENGTH, axis_color);
 
+        let first_handle = handles.get(0).unwrap();
+        let second_handle = handles.get(1).unwrap();
+        let third_handle = handles.get(2).unwrap();
+        let fourth_handle = handles.get(3).unwrap();
+        mode2d.draw_line(first_handle.center_x, first_handle.center_y, second_handle.center_x, second_handle.center_y, Color::ROYALBLUE);
+        mode2d.draw_line(third_handle.center_x, third_handle.center_y, fourth_handle.center_x, fourth_handle.center_y, Color::ROYALBLUE);
+
         for (idx, handle) in handles.iter_mut().enumerate() {
             let mouse = mode2d.get_screen_to_world2D(mode2d.get_mouse_position(), camera);
             let is_handle_on_hover = check_collision_point_circle(
