@@ -5,11 +5,28 @@ use raylib::prelude::*;
 const AXIS_LENGTH: i32 = 300;
 const HANDLE_RADIUS: f32 = 10.0;
 
+struct Handle {
+    center_x: i32,
+    center_y: i32,
+    radius: f32,
+}
+
+impl Handle {
+    fn new(center_x: i32, center_y: i32, radius: f32) -> Self {
+        Self {
+            center_x,
+            center_y,
+            radius,
+        }
+    }
+}
+
 fn main() {
     let bg_color = Color::from_hex("3c3836").unwrap();
     let axis_color: Color = Color::WHITE;
     let handle_color = Color::from_hex("cc241d").unwrap();
     let hover_color = Color::from_hex("d79921").unwrap();
+    let selected_color = Color::WHITE;
 
     let (mut rl, thread) = raylib::init().size(740, 580).title("Bézier").build();
 
@@ -25,7 +42,14 @@ fn main() {
         rotation: 0.0,
     };
 
-    let mut handle_pos = Vector2::zero();
+    let mut dragging_handle_idx = None;
+
+    let mut handles = vec![
+        Handle::new(0, 0, HANDLE_RADIUS),
+        Handle::new((AXIS_LENGTH as f32 * 0.25) as i32, (-AXIS_LENGTH as f32 * 0.25) as i32, HANDLE_RADIUS),
+        Handle::new((AXIS_LENGTH as f32 * 0.75) as i32, (-AXIS_LENGTH as f32 * 0.75) as i32, HANDLE_RADIUS),
+        Handle::new(AXIS_LENGTH, -AXIS_LENGTH, HANDLE_RADIUS),
+    ];
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
@@ -35,21 +59,40 @@ fn main() {
         mode2d.draw_line(0, 0, AXIS_LENGTH, 0, axis_color);
         mode2d.draw_line(0, 0, 0, -AXIS_LENGTH, axis_color);
 
+        for (idx, handle) in handles.iter_mut().enumerate() {
+            let mouse = mode2d.get_screen_to_world2D(mode2d.get_mouse_position(), camera);
+            let is_handle_on_hover = check_collision_point_circle(
+                mouse,
+                Vector2::new(handle.center_x as f32, handle.center_y as f32),
+                HANDLE_RADIUS,
+            );
+            
+            let is_handle_selected = Some(idx) == dragging_handle_idx;
 
-        let mouse = mode2d.get_screen_to_world2D(mode2d.get_mouse_position(), camera);
-        let is_on_hover = check_collision_point_circle(mouse, handle_pos, HANDLE_RADIUS);
+            let color = if is_handle_selected {
+                selected_color
+            } else if is_handle_on_hover {
+                hover_color
+            } else {
+                handle_color
+            };
 
-        let circle_color = if is_on_hover {
-            hover_color
-        } else {
-            handle_color
-        };
+            if is_handle_selected {
+                handle.center_x = mouse.x as i32;
+                handle.center_y = mouse.y as i32;
+            }
 
-        let is_dragging = is_on_hover && mode2d.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT);
-        if is_dragging {
-            handle_pos = mouse;
-        } 
+            mode2d.draw_circle(handle.center_x, handle.center_y, handle.radius, color);
 
-        mode2d.draw_circle_v(handle_pos, HANDLE_RADIUS, circle_color);
+            // if we hover over a handle and click, we should select it
+            if is_handle_on_hover && mode2d.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT) {
+                dragging_handle_idx = Some(idx);
+            }
+
+            // if we're dragging a handle and we release the mouse, we should unselect it
+            if is_handle_selected && mode2d.is_mouse_button_released(MouseButton::MOUSE_BUTTON_LEFT) {
+                dragging_handle_idx = None;
+            }
+        }
     }
 }
